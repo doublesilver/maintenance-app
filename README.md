@@ -19,9 +19,9 @@
 
 ### 🌐 라이브 데모
 
-- **Frontend**: [https://maintenance-app.vercel.app](https://maintenance-app.vercel.app)
-- **API 문서**: [http://YOUR_EC2_IP/docs](http://YOUR_EC2_IP/docs)
-- **Celery Monitor**: [http://YOUR_EC2_IP:5555](http://YOUR_EC2_IP:5555)
+- **Frontend**: [https://maintenance-app.vercel.app](https://maintenance-app.vercel.app) (배포 후 업데이트 예정)
+- **API 문서**: 로컬 개발 환경에서 확인 가능 (`http://localhost:8000/docs`)
+- **GitHub**: [https://github.com/doublesilver/maintenance-app](https://github.com/doublesilver/maintenance-app)
 
 ---
 
@@ -44,13 +44,11 @@
 - **State**: React Query (권장)
 
 ### Infrastructure
-- **Compute**: AWS EC2 (t3.micro)
-- **Storage**: AWS S3
-- **Database**: AWS RDS PostgreSQL (선택)
-- **Cache**: Redis (ElastiCache 또는 EC2)
-- **Web Server**: Nginx
-- **Process Manager**: Systemd
-- **Monitoring**: AWS CloudWatch, Flower
+- **Frontend Hosting**: Vercel
+- **Backend**: 로컬 개발 환경 (AWS EC2 배포 준비 완료)
+- **Cache**: Redis (WSL2)
+- **Database**: SQLite (dev) / PostgreSQL (prod 준비 완료)
+- **Monitoring**: Flower (Celery task monitoring)
 
 ### DevOps
 - **CI/CD**: GitHub Actions
