@@ -41,7 +41,7 @@ Railway는 프로젝트 루트에 있는 파일을 자동으로 감지하려고 
 ```
 "Variables" 탭에서 추가:
 
-OPENAI_API_KEY=your-openai-api-key-here
+GROQ_API_KEY=your-groq-api-key-here
 
 DATABASE_URL=sqlite:///./maintenance.db
 
@@ -51,6 +51,12 @@ ALGORITHM=HS256
 
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 ```
+
+**Groq API Key 발급 방법**:
+1. https://console.groq.com 접속
+2. 회원가입 (Google/GitHub 로그인)
+3. API Keys → Create API Key
+4. 생성된 키 복사 → Railway에 입력
 
 ### 5단계: Redis 서비스 추가
 
@@ -86,7 +92,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 ## 📋 배포 확인 체크리스트
 
 - [ ] Backend 서비스 Root Directory = `backend`
-- [ ] 환경변수 5개 입력 (OPENAI_API_KEY, DATABASE_URL, SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES)
+- [ ] 환경변수 5개 입력 (GROQ_API_KEY, DATABASE_URL, SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES)
 - [ ] Redis 서비스 추가됨
 - [ ] REDIS_URL 자동 연결됨
 - [ ] 도메인 생성됨
