@@ -18,7 +18,7 @@ def init_super_admin():
     """최고 관리자 계정 생성 또는 업데이트"""
 
     # 환경변수에서 비밀번호 읽기 (Railway에서 설정)
-    SUPER_ADMIN_EMAIL = "admin"
+    SUPER_ADMIN_EMAIL = "admin@system.local"  # 이메일 형식으로 변경
     SUPER_ADMIN_PASSWORD = os.getenv("SUPER_ADMIN_PASSWORD", "qwer1234")
     SUPER_ADMIN_NAME = "Super Administrator"
 
@@ -57,12 +57,16 @@ def init_super_admin():
 
     conn.close()
 
-    print("\nSuper Admin Credentials:")
+    print("\n" + "="*60)
+    print("Super Admin Account:")
     print(f"  Email: {SUPER_ADMIN_EMAIL}")
     print(f"  Password: {'*' * len(SUPER_ADMIN_PASSWORD)} (from env or default)")
     print(f"  Role: super_admin")
-    print("\nIMPORTANT: Change the password in Railway environment variables!")
-    print("  Set SUPER_ADMIN_PASSWORD in Railway dashboard")
+    print("="*60)
+    print("\nIMPORTANT: Change password in Railway environment variables:")
+    print("  Variable: SUPER_ADMIN_PASSWORD")
+    print("  Value: your-secure-password-here")
+    print("="*60)
 
 if __name__ == "__main__":
     init_super_admin()
