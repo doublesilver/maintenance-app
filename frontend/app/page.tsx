@@ -4,41 +4,41 @@ export default function Home() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       {/* Hero Section */}
-      <div className="py-20 text-center">
-        <div className="inline-flex items-center px-4 py-2 bg-primary-50 text-primary-700 rounded-full text-sm font-medium mb-6">
-          <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+      <div className="py-12 sm:py-16 md:py-20 text-center">
+        <div className="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 bg-primary-50 text-primary-700 rounded-full text-xs sm:text-sm font-medium mb-4 sm:mb-6">
+          <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" fill="currentColor" viewBox="0 0 20 20">
             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
           </svg>
           AI 기반 스마트 관리 시스템
         </div>
 
-        <h1 className="text-5xl md:text-6xl font-bold text-slate-900 mb-6 leading-tight">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 mb-4 sm:mb-6 leading-tight px-4">
           건물 유지보수,
-          <br />
+          <br className="sm:hidden" />{' '}
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-emerald-600">
             이제는 스마트하게
           </span>
         </h1>
 
-        <p className="text-xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed">
+        <p className="text-base sm:text-lg md:text-xl text-slate-600 mb-8 sm:mb-10 max-w-2xl mx-auto leading-relaxed px-4">
           AI가 자동으로 분류하고 우선순위를 매기는
-          <br />
+          <br className="hidden sm:block" />
           차세대 건물 유지보수 관리 플랫폼
         </p>
 
-        <div className="flex justify-center gap-4">
+        <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 px-4">
           <Link
             href="/submit"
-            className="inline-flex items-center px-8 py-4 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-all shadow-lg hover:shadow-xl font-semibold text-lg"
+            className="inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-all shadow-lg hover:shadow-xl font-semibold text-base sm:text-lg"
           >
             유지보수 요청하기
-            <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
           </Link>
           <Link
             href="/dashboard"
-            className="inline-flex items-center px-8 py-4 bg-white text-slate-700 rounded-xl hover:bg-slate-50 transition-all border-2 border-slate-200 font-semibold text-lg"
+            className="inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 bg-white text-slate-700 rounded-xl hover:bg-slate-50 transition-all border-2 border-slate-200 font-semibold text-base sm:text-lg"
           >
             대시보드 보기
           </Link>
@@ -46,10 +46,10 @@ export default function Home() {
       </div>
 
       {/* Features Grid */}
-      <div className="py-20">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-slate-900 mb-4">주요 기능</h2>
-          <p className="text-lg text-slate-600">효율적인 건물 관리를 위한 핵심 기능들</p>
+      <div className="py-12 sm:py-16 md:py-20">
+        <div className="text-center mb-10 sm:mb-16">
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-3 sm:mb-4 px-4">주요 기능</h2>
+          <p className="text-base sm:text-lg text-slate-600 px-4">효율적인 건물 관리를 위한 핵심 기능들</p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
@@ -110,33 +110,33 @@ export default function Home() {
       </div>
 
       {/* Stats Section */}
-      <div className="py-20">
-        <div className="bg-gradient-to-br from-primary-600 to-emerald-600 rounded-3xl p-12 text-white">
-          <div className="grid md:grid-cols-3 gap-8 text-center">
+      <div className="py-12 sm:py-16 md:py-20">
+        <div className="bg-gradient-to-br from-primary-600 to-emerald-600 rounded-2xl sm:rounded-3xl p-8 sm:p-12 text-white">
+          <div className="grid grid-cols-3 gap-4 sm:gap-8 text-center">
             <div>
-              <div className="text-5xl font-bold mb-2">25배</div>
-              <div className="text-primary-100 text-lg">응답 속도 향상</div>
+              <div className="text-3xl sm:text-4xl md:text-5xl font-bold mb-1 sm:mb-2">25배</div>
+              <div className="text-primary-100 text-xs sm:text-sm md:text-base lg:text-lg">응답 속도 향상</div>
             </div>
             <div>
-              <div className="text-5xl font-bold mb-2">5개</div>
-              <div className="text-primary-100 text-lg">자동 분류 카테고리</div>
+              <div className="text-3xl sm:text-4xl md:text-5xl font-bold mb-1 sm:mb-2">5개</div>
+              <div className="text-primary-100 text-xs sm:text-sm md:text-base lg:text-lg">자동 분류 카테고리</div>
             </div>
             <div>
-              <div className="text-5xl font-bold mb-2">실시간</div>
-              <div className="text-primary-100 text-lg">상태 업데이트</div>
+              <div className="text-3xl sm:text-4xl md:text-5xl font-bold mb-1 sm:mb-2">실시간</div>
+              <div className="text-primary-100 text-xs sm:text-sm md:text-base lg:text-lg">상태 업데이트</div>
             </div>
           </div>
         </div>
       </div>
 
       {/* How it works */}
-      <div className="py-20">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-slate-900 mb-4">이용 방법</h2>
-          <p className="text-lg text-slate-600">3단계로 간편하게 요청하세요</p>
+      <div className="py-12 sm:py-16 md:py-20">
+        <div className="text-center mb-10 sm:mb-16">
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-3 sm:mb-4 px-4">이용 방법</h2>
+          <p className="text-base sm:text-lg text-slate-600 px-4">3단계로 간편하게 요청하세요</p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid sm:grid-cols-3 gap-8 sm:gap-6 md:gap-8">
           <div className="text-center">
             <div className="w-16 h-16 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6">
               1

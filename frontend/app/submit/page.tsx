@@ -83,21 +83,21 @@ export default function SubmitRequest() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-slate-900 mb-3">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-2 sm:mb-3">
           유지보수 요청하기
         </h1>
-        <p className="text-lg text-slate-600">
+        <p className="text-base sm:text-lg text-slate-600">
           문제를 설명해주시면 AI가 자동으로 분류하고 우선순위를 판단합니다
         </p>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
+      <div className="grid lg:grid-cols-3 gap-6 sm:gap-8">
         {/* Form Section */}
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label htmlFor="description" className="block text-sm font-semibold text-slate-900 mb-2">
