@@ -229,6 +229,9 @@ async def lifespan(app: FastAPI):
     # Shutdown
     print("Shutting down...")
 
+# 프로덕션 환경에서는 Swagger UI 비활성화
+is_production = os.getenv("RAILWAY_ENVIRONMENT") == "production"
+
 app = FastAPI(
     title="Building Maintenance API",
     description="""
@@ -270,7 +273,11 @@ app = FastAPI(
     license_info={
         "name": "MIT",
     },
-    lifespan=lifespan
+    lifespan=lifespan,
+    # 프로덕션에서 Swagger UI 비활성화
+    docs_url="/docs" if not is_production else None,
+    redoc_url="/redoc" if not is_production else None,
+    openapi_url="/openapi.json" if not is_production else None
 )
 
 # CORS 재설정 (lifespan 후)
@@ -665,49 +672,8 @@ async def get_me(current_user: User = Depends(get_current_user)):
     """현재 로그인한 사용자 정보"""
     return current_user
 
-@app.post("/api/auth/promote-admin")
-async def promote_admin(email: str, secret: str):
-    """
-    임시 관리자 승격 API (개발/배포용)
-
-    사용법: POST /api/auth/promote-admin?email=test@test.com&secret=promote123
-
-    주의: 프로덕션에서는 이 엔드포인트를 제거하거나 더 강력한 인증을 추가하세요!
-    """
-    # 간단한 비밀 키 확인 (환경변수로 설정 가능)
-    PROMOTE_SECRET = os.getenv("PROMOTE_SECRET", "promote123")
-
-    if secret != PROMOTE_SECRET:
-        raise HTTPException(status_code=403, detail="Invalid secret key")
-
-    with get_db() as conn:
-        cursor = conn.cursor()
-
-        # 사용자 존재 확인
-        cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
-        user = cursor.fetchone()
-
-        if not user:
-            raise HTTPException(status_code=404, detail=f"User with email '{email}' not found")
-
-        # 이미 관리자인지 확인
-        if user["role"] == "admin":
-            return {"message": f"User '{email}' is already an admin", "status": "already_admin"}
-
-        # 관리자로 승격
-        cursor.execute("UPDATE users SET role = 'admin' WHERE email = ?", (email,))
-        conn.commit()
-
-        return {
-            "message": f"Successfully promoted '{email}' to admin",
-            "status": "promoted",
-            "user": {
-                "email": user["email"],
-                "full_name": user["full_name"],
-                "previous_role": user["role"],
-                "new_role": "admin"
-            }
-        }
+# 임시 관리자 승격 API는 보안상의 이유로 제거되었습니다.
+# Railway CLI를 사용하세요: railway run python promote_admin.py <email>
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
