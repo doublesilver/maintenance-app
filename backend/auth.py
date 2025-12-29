@@ -104,6 +104,13 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
     )
 
 async def get_current_active_admin(current_user: User = Depends(get_current_user)):
-    if current_user.role != "admin":
+    """관리자 또는 최고 관리자 권한 확인"""
+    if current_user.role not in ["admin", "super_admin"]:
         raise HTTPException(status_code=403, detail="Not enough permissions")
+    return current_user
+
+async def get_current_super_admin(current_user: User = Depends(get_current_user)):
+    """최고 관리자 권한 확인"""
+    if current_user.role != "super_admin":
+        raise HTTPException(status_code=403, detail="Super admin permission required")
     return current_user

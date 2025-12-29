@@ -17,7 +17,7 @@ from tasks import categorize_maintenance_request
 from auth import (
     Token, User, UserCreate, UserInDB,
     get_password_hash, verify_password, create_access_token,
-    get_current_user, get_current_active_admin, ACCESS_TOKEN_EXPIRE_MINUTES
+    get_current_user, get_current_active_admin, get_current_super_admin, ACCESS_TOKEN_EXPIRE_MINUTES
 )
 
 # .env 파일 로드
@@ -90,6 +90,13 @@ def init_db():
         """)
 
         conn.commit()
+
+    # 최고 관리자 계정 자동 생성
+    from init_super_admin import init_super_admin
+    try:
+        init_super_admin()
+    except Exception as e:
+        print(f"Warning: Could not initialize super admin: {e}")
 
 # Pydantic 모델
 class MaintenanceRequest(BaseModel):
@@ -684,10 +691,10 @@ async def get_me(current_user: User = Depends(get_current_user)):
     """현재 로그인한 사용자 정보"""
     return current_user
 
-# 관리자 전용 사용자 관리 API
+# 최고 관리자 전용 사용자 관리 API
 @app.get("/api/admin/users", response_model=List[User])
-async def get_all_users(current_user: User = Depends(get_current_active_admin)):
-    """관리자 전용: 모든 사용자 목록 조회"""
+async def get_all_users(current_user: User = Depends(get_current_super_admin)):
+    """최고 관리자 전용: 모든 사용자 목록 조회"""
     with get_db() as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT id, email, full_name, role, created_at FROM users ORDER BY created_at DESC")
@@ -707,15 +714,15 @@ async def get_all_users(current_user: User = Depends(get_current_active_admin)):
 async def update_user_role(
     user_id: int,
     new_role: str,
-    current_user: User = Depends(get_current_active_admin)
+    current_user: User = Depends(get_current_super_admin)
 ):
     """
-    관리자 전용: 사용자 역할 변경
+    최고 관리자 전용: 사용자 역할 변경
 
-    new_role: "user" 또는 "admin"
+    new_role: "user", "admin", 또는 "super_admin"
     """
-    if new_role not in ["user", "admin"]:
-        raise HTTPException(status_code=400, detail="Role must be 'user' or 'admin'")
+    if new_role not in ["user", "admin", "super_admin"]:
+        raise HTTPException(status_code=400, detail="Role must be 'user', 'admin', or 'super_admin'")
 
     # 자기 자신의 역할은 변경할 수 없음
     if user_id == current_user.id:

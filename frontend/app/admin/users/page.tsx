@@ -133,29 +133,37 @@ export default function AdminUsersPage() {
                       <td className="py-4 px-4">
                         <span
                           className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                            user.role === 'admin'
+                            user.role === 'super_admin'
+                              ? 'bg-red-100 text-red-800'
+                              : user.role === 'admin'
                               ? 'bg-purple-100 text-purple-800'
                               : 'bg-slate-100 text-slate-800'
                           }`}
                         >
-                          {user.role === 'admin' ? '👑 관리자' : '👤 사용자'}
+                          {user.role === 'super_admin' ? '⭐ 최고 관리자' : user.role === 'admin' ? '👑 관리자' : '👤 사용자'}
                         </span>
                       </td>
                       <td className="py-4 px-4">
-                        {user.role === 'admin' ? (
-                          <button
-                            onClick={() => updateRole(user.id, 'user')}
-                            className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-sm font-medium"
-                          >
-                            일반 사용자로 변경
-                          </button>
+                        {user.role === 'super_admin' ? (
+                          <span className="text-slate-400 text-sm italic">변경 불가</span>
                         ) : (
-                          <button
-                            onClick={() => updateRole(user.id, 'admin')}
-                            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
-                          >
-                            관리자로 승격
-                          </button>
+                          <div className="flex gap-2">
+                            {user.role === 'admin' ? (
+                              <button
+                                onClick={() => updateRole(user.id, 'user')}
+                                className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-sm font-medium"
+                              >
+                                사용자로 변경
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => updateRole(user.id, 'admin')}
+                                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+                              >
+                                관리자로 승격
+                              </button>
+                            )}
+                          </div>
                         )}
                       </td>
                     </tr>
