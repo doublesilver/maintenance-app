@@ -140,6 +140,33 @@ class ConnectionManager:
 
 manager = ConnectionManager()
 
+# 키워드 기반 분류 (OpenAI API 대체)
+def categorize_with_keywords(description: str) -> dict:
+    """간단한 키워드 기반 분류 (OpenAI API quota 초과 시 대체)"""
+    desc_lower = description.lower()
+
+    # 카테고리 분류
+    category = "other"
+    if any(word in desc_lower for word in ["전기", "전등", "조명", "콘센트", "스위치", "누전", "정전"]):
+        category = "electrical"
+    elif any(word in desc_lower for word in ["수도", "배관", "물", "수도꼭지", "변기", "싱크대", "하수", "누수"]):
+        category = "plumbing"
+    elif any(word in desc_lower for word in ["냉방", "난방", "에어컨", "보일러", "환기", "온도"]):
+        category = "hvac"
+    elif any(word in desc_lower for word in ["벽", "바닥", "천장", "문", "창문", "계단", "균열", "파손"]):
+        category = "structural"
+
+    # 우선순위 판단
+    priority = "medium"
+    if any(word in desc_lower for word in ["긴급", "위험", "사고", "고장", "멈춤", "안됨", "불가능"]):
+        priority = "high"
+    elif any(word in desc_lower for word in ["샘", "새", "누수", "넘침", "뜨거움"]):
+        priority = "high"
+    elif any(word in desc_lower for word in ["나중", "여유", "천천히"]):
+        priority = "low"
+
+    return {"category": category, "priority": priority}
+
 # AI 카테고리화 함수 (동기 - 빠른 응답용)
 async def categorize_with_ai_sync(description: str) -> dict:
     try:
@@ -181,9 +208,11 @@ async def categorize_with_ai_sync(description: str) -> dict:
         return result
     except Exception as e:
         print(f"[ERROR] AI categorization error: {type(e).__name__}: {str(e)}")
+        print("[INFO] Falling back to keyword-based categorization")
         import traceback
         traceback.print_exc()
-        return {"category": "other", "priority": "medium"}
+        # OpenAI API 실패 시 키워드 기반 분류로 대체
+        return categorize_with_keywords(description)
 
 # Lifespan 이벤트 (Deprecation 경고 해결)
 from contextlib import asynccontextmanager
