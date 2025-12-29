@@ -225,7 +225,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Building Maintenance API - Enhanced",
     description="AI-powered building maintenance management with async tasks, file upload, and real-time notifications",
-    version="2.0.0",
+    version="2.0.1",  # Keyword-based classification fallback added
     lifespan=lifespan
 )
 
