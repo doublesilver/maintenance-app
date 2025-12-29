@@ -1,8 +1,9 @@
 from fastapi import FastAPI, HTTPException, File, UploadFile, WebSocket, WebSocketDisconnect, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timedelta
 import sqlite3
 from openai import OpenAI
 import os
@@ -11,6 +12,11 @@ from dotenv import load_dotenv
 import boto3
 import uuid
 from tasks import categorize_maintenance_request
+from auth import (
+    Token, User, UserCreate, UserInDB,
+    get_password_hash, verify_password, create_access_token,
+    get_current_user, ACCESS_TOKEN_EXPIRE_MINUTES
+)
 
 # .env 파일 로드
 load_dotenv()
@@ -495,6 +501,65 @@ async def get_stats():
         "by_category": category_counts,
         "by_priority": priority_counts
     }
+
+# 인증 엔드포인트
+@app.post("/api/auth/register", response_model=User)
+async def register(user: UserCreate):
+    """회원가입"""
+    with get_db() as conn:
+        cursor = conn.cursor()
+
+        # 이메일 중복 확인
+        cursor.execute("SELECT * FROM users WHERE email = ?", (user.email,))
+        if cursor.fetchone():
+            raise HTTPException(status_code=400, detail="Email already registered")
+
+        # 비밀번호 해시화
+        hashed_password = get_password_hash(user.password)
+
+        # 사용자 생성
+        cursor.execute("""
+            INSERT INTO users (email, hashed_password, full_name)
+            VALUES (?, ?, ?)
+        """, (user.email, hashed_password, user.full_name))
+        conn.commit()
+
+        cursor.execute("SELECT * FROM users WHERE email = ?", (user.email,))
+        new_user = cursor.fetchone()
+
+    return User(
+        email=new_user["email"],
+        full_name=new_user["full_name"],
+        role=new_user["role"]
+    )
+
+@app.post("/api/auth/login", response_model=Token)
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    """로그인"""
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM users WHERE email = ?", (form_data.username,))
+        user = cursor.fetchone()
+
+    if not user or not verify_password(form_data.password, user["hashed_password"]):
+        raise HTTPException(
+            status_code=401,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # 액세스 토큰 생성
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user["email"]}, expires_delta=access_token_expires
+    )
+
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@app.get("/api/auth/me", response_model=User)
+async def get_me(current_user: User = Depends(get_current_user)):
+    """현재 로그인한 사용자 정보"""
+    return current_user
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
