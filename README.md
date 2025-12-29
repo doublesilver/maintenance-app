@@ -19,8 +19,8 @@
 
 ### 🌐 라이브 데모
 
-- **Frontend**: [https://maintenance-app.vercel.app](https://maintenance-app.vercel.app) (배포 후 업데이트 예정)
-- **API 문서**: 로컬 개발 환경에서 확인 가능 (`http://localhost:8000/docs`)
+- **Frontend**: [https://maintenance-app-azure.vercel.app](https://maintenance-app-azure.vercel.app)
+- **API 문서**: AWS 배포 후 업데이트 예정 (로컬: `http://localhost:8000/docs`)
 - **GitHub**: [https://github.com/doublesilver/maintenance-app](https://github.com/doublesilver/maintenance-app)
 
 ---
