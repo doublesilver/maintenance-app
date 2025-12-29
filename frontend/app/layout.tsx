@@ -53,10 +53,16 @@ export default function RootLayout({
                   요청하기
                 </Link>
                 <Link
-                  href="/dashboard"
+                  href="/my-requests"
                   className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 px-4 py-2 rounded-lg transition-colors font-medium"
                 >
-                  대시보드
+                  내 요청
+                </Link>
+                <Link
+                  href="/admin/dashboard"
+                  className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 px-4 py-2 rounded-lg transition-colors font-medium"
+                >
+                  관리자
                 </Link>
                 <AuthButtons />
               </div>

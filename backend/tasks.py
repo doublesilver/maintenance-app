@@ -1,5 +1,4 @@
 from celery_app import celery_app
-from openai import OpenAI
 import os
 import json
 from dotenv import load_dotenv
@@ -9,9 +8,6 @@ load_dotenv()
 # Groq 클라이언트 초기화 (OpenAI 대신 사용)
 from groq import Groq
 groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
-
-# OpenAI 클라이언트 (백업용, 현재 비활성화)
-# client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # 키워드 기반 분류 (폴백용)
 def categorize_with_keywords(description: str) -> dict:

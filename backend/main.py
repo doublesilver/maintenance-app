@@ -5,7 +5,6 @@ from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime, timedelta
 import sqlite3
-from openai import OpenAI
 import os
 from contextlib import contextmanager
 from dotenv import load_dotenv
@@ -15,7 +14,7 @@ from tasks import categorize_maintenance_request
 from auth import (
     Token, User, UserCreate, UserInDB,
     get_password_hash, verify_password, create_access_token,
-    get_current_user, ACCESS_TOKEN_EXPIRE_MINUTES
+    get_current_user, get_current_active_admin, ACCESS_TOKEN_EXPIRE_MINUTES
 )
 
 # .env 파일 로드
@@ -57,6 +56,7 @@ def init_db():
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS requests (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
                 description TEXT NOT NULL,
                 category VARCHAR(50),
                 priority VARCHAR(20),
@@ -66,7 +66,8 @@ def init_db():
                 image_url VARCHAR(500),
                 task_id VARCHAR(100),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id)
             )
         """)
 
@@ -304,7 +305,10 @@ async def health_check():
     }
 
 @app.post("/api/requests", response_model=RequestResponse)
-async def submit_request(request: MaintenanceRequest):
+async def submit_request(
+    request: MaintenanceRequest,
+    current_user: User = Depends(get_current_user)
+):
     """
     유지보수 요청 생성
     - use_async=True: Celery로 비동기 AI 처리 (빠른 응답)
@@ -316,9 +320,10 @@ async def submit_request(request: MaintenanceRequest):
         with get_db() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT INTO requests (description, category, priority, location, contact_info)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO requests (user_id, description, category, priority, location, contact_info)
+                VALUES (?, ?, ?, ?, ?, ?)
             """, (
+                current_user.id,
                 request.description,
                 "processing",  # 임시 카테고리
                 "processing",  # 임시 우선순위
@@ -353,9 +358,10 @@ async def submit_request(request: MaintenanceRequest):
         with get_db() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT INTO requests (description, category, priority, location, contact_info)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO requests (user_id, description, category, priority, location, contact_info)
+                VALUES (?, ?, ?, ?, ?, ?)
             """, (
+                current_user.id,
                 request.description,
                 ai_result.get("category", "other"),
                 ai_result.get("priority", "medium"),
@@ -439,7 +445,11 @@ async def upload_image(request_id: int, file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
 
 @app.get("/api/requests", response_model=List[RequestResponse])
-async def get_all_requests(status: Optional[str] = None):
+async def get_all_requests(
+    status: Optional[str] = None,
+    current_user: User = Depends(get_current_active_admin)
+):
+    """관리자 전용: 모든 요청 조회"""
     with get_db() as conn:
         cursor = conn.cursor()
         if status:
@@ -450,8 +460,34 @@ async def get_all_requests(status: Optional[str] = None):
 
     return [dict(row) for row in rows]
 
+@app.get("/api/my-requests", response_model=List[RequestResponse])
+async def get_my_requests(
+    status: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """사용자 본인의 요청만 조회"""
+    with get_db() as conn:
+        cursor = conn.cursor()
+        if status:
+            cursor.execute(
+                "SELECT * FROM requests WHERE user_id = ? AND status = ? ORDER BY created_at DESC",
+                (current_user.id, status)
+            )
+        else:
+            cursor.execute(
+                "SELECT * FROM requests WHERE user_id = ? ORDER BY created_at DESC",
+                (current_user.id,)
+            )
+        rows = cursor.fetchall()
+
+    return [dict(row) for row in rows]
+
 @app.get("/api/requests/{request_id}", response_model=RequestResponse)
-async def get_request(request_id: int):
+async def get_request(
+    request_id: int,
+    current_user: User = Depends(get_current_user)
+):
+    """요청 상세 조회 (본인 요청 또는 관리자만)"""
     with get_db() as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM requests WHERE id = ?", (request_id,))
@@ -460,10 +496,23 @@ async def get_request(request_id: int):
     if not row:
         raise HTTPException(status_code=404, detail="Request not found")
 
+    # 본인 요청이 아니고 관리자도 아니면 거부
+    if row["user_id"] != current_user.id and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized to view this request")
+
     return dict(row)
 
 @app.patch("/api/requests/{request_id}", response_model=RequestResponse)
-async def update_request(request_id: int, update: UpdateRequest):
+async def update_request(
+    request_id: int,
+    update: UpdateRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """요청 업데이트 (관리자 전용)"""
+    # 관리자만 요청 상태 업데이트 가능
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can update requests")
+
     with get_db() as conn:
         cursor = conn.cursor()
 
@@ -504,9 +553,25 @@ async def update_request(request_id: int, update: UpdateRequest):
     return dict(row)
 
 @app.delete("/api/requests/{request_id}")
-async def delete_request(request_id: int):
+async def delete_request(
+    request_id: int,
+    current_user: User = Depends(get_current_user)
+):
+    """요청 삭제 (본인 요청 또는 관리자만)"""
     with get_db() as conn:
         cursor = conn.cursor()
+
+        # 요청 존재 여부 및 소유권 확인
+        cursor.execute("SELECT * FROM requests WHERE id = ?", (request_id,))
+        row = cursor.fetchone()
+
+        if not row:
+            raise HTTPException(status_code=404, detail="Request not found")
+
+        # 본인 요청이 아니고 관리자도 아니면 거부
+        if row["user_id"] != current_user.id and current_user.role != "admin":
+            raise HTTPException(status_code=403, detail="Not authorized to delete this request")
+
         cursor.execute("DELETE FROM requests WHERE id = ?", (request_id,))
         conn.commit()
 
@@ -516,7 +581,8 @@ async def delete_request(request_id: int):
     return {"message": "Request deleted successfully"}
 
 @app.get("/api/stats")
-async def get_stats():
+async def get_stats(current_user: User = Depends(get_current_active_admin)):
+    """통계 조회 (관리자 전용)"""
     with get_db() as conn:
         cursor = conn.cursor()
 
@@ -565,6 +631,7 @@ async def register(user: UserCreate):
         new_user = cursor.fetchone()
 
     return User(
+        id=new_user["id"],
         email=new_user["email"],
         full_name=new_user["full_name"],
         role=new_user["role"]
@@ -597,6 +664,50 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 async def get_me(current_user: User = Depends(get_current_user)):
     """현재 로그인한 사용자 정보"""
     return current_user
+
+@app.post("/api/auth/promote-admin")
+async def promote_admin(email: str, secret: str):
+    """
+    임시 관리자 승격 API (개발/배포용)
+
+    사용법: POST /api/auth/promote-admin?email=test@test.com&secret=promote123
+
+    주의: 프로덕션에서는 이 엔드포인트를 제거하거나 더 강력한 인증을 추가하세요!
+    """
+    # 간단한 비밀 키 확인 (환경변수로 설정 가능)
+    PROMOTE_SECRET = os.getenv("PROMOTE_SECRET", "promote123")
+
+    if secret != PROMOTE_SECRET:
+        raise HTTPException(status_code=403, detail="Invalid secret key")
+
+    with get_db() as conn:
+        cursor = conn.cursor()
+
+        # 사용자 존재 확인
+        cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
+        user = cursor.fetchone()
+
+        if not user:
+            raise HTTPException(status_code=404, detail=f"User with email '{email}' not found")
+
+        # 이미 관리자인지 확인
+        if user["role"] == "admin":
+            return {"message": f"User '{email}' is already an admin", "status": "already_admin"}
+
+        # 관리자로 승격
+        cursor.execute("UPDATE users SET role = 'admin' WHERE email = ?", (email,))
+        conn.commit()
+
+        return {
+            "message": f"Successfully promoted '{email}' to admin",
+            "status": "promoted",
+            "user": {
+                "email": user["email"],
+                "full_name": user["full_name"],
+                "previous_role": user["role"],
+                "new_role": "admin"
+            }
+        }
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):

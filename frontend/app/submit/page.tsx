@@ -1,12 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import axios from 'axios'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
 export default function SubmitRequest() {
+  const router = useRouter()
   const [formData, setFormData] = useState({
     description: '',
     location: '',
@@ -16,6 +18,13 @@ export default function SubmitRequest() {
   const [result, setResult] = useState<any>(null)
   const [error, setError] = useState('')
 
+  useEffect(() => {
+    const token = localStorage.getItem('access_token')
+    if (!token) {
+      router.push('/login')
+    }
+  }, [])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -23,14 +32,34 @@ export default function SubmitRequest() {
     setResult(null)
 
     try {
-      const response = await axios.post(`${API_URL}/api/requests`, {
-        ...formData,
-        use_async: false  // 동기 처리로 즉시 AI 분류
-      })
+      const token = localStorage.getItem('access_token')
+      if (!token) {
+        router.push('/login')
+        return
+      }
+
+      const response = await axios.post(
+        `${API_URL}/api/requests`,
+        {
+          ...formData,
+          use_async: false  // 동기 처리로 즉시 AI 분류
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      )
       setResult(response.data)
       setFormData({ description: '', location: '', contact_info: '' })
     } catch (err: any) {
-      setError(err.response?.data?.detail || '요청 제출 중 오류가 발생했습니다')
+      if (err.response?.status === 401) {
+        localStorage.removeItem('access_token')
+        localStorage.removeItem('user_email')
+        router.push('/login')
+      } else {
+        setError(err.response?.data?.detail || '요청 제출 중 오류가 발생했습니다')
+      }
     } finally {
       setLoading(false)
     }

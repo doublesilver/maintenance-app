@@ -81,15 +81,26 @@ export default function MobileNav() {
                 요청하기
               </Link>
               <Link
-                href="/dashboard"
+                href="/my-requests"
                 onClick={() => setIsOpen(false)}
                 className={`block px-4 py-3 rounded-lg font-medium transition-colors ${
-                  isActive('/dashboard')
+                  isActive('/my-requests')
                     ? 'bg-primary-50 text-primary-700'
                     : 'text-slate-600 hover:bg-slate-100'
                 }`}
               >
-                대시보드
+                내 요청
+              </Link>
+              <Link
+                href="/admin/dashboard"
+                onClick={() => setIsOpen(false)}
+                className={`block px-4 py-3 rounded-lg font-medium transition-colors ${
+                  isActive('/admin/dashboard')
+                    ? 'bg-primary-50 text-primary-700'
+                    : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                관리자
               </Link>
 
               {/* 인증 버튼 (모바일) */}

@@ -2,17 +2,20 @@
 
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+import { useRouter } from 'next/navigation'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
 interface Request {
   id: number
+  user_id?: number
   description: string
   category: string
   priority: string
   status: string
   location: string | null
   contact_info: string | null
+  image_url?: string
   created_at: string
   updated_at: string
 }
@@ -24,28 +27,50 @@ interface Stats {
   by_priority: { [key: string]: number }
 }
 
-export default function Dashboard() {
+export default function AdminDashboard() {
+  const router = useRouter()
   const [requests, setRequests] = useState<Request[]>([])
   const [stats, setStats] = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<string>('all')
   const [selectedRequest, setSelectedRequest] = useState<Request | null>(null)
+  const [error, setError] = useState('')
 
   useEffect(() => {
+    const token = localStorage.getItem('access_token')
+    if (!token) {
+      router.push('/login')
+      return
+    }
     fetchData()
   }, [filter])
 
   const fetchData = async () => {
     setLoading(true)
     try {
+      const token = localStorage.getItem('access_token')
+      const headers = {
+        'Authorization': `Bearer ${token}`
+      }
+
       const [requestsRes, statsRes] = await Promise.all([
-        axios.get(`${API_URL}/api/requests${filter !== 'all' ? `?status=${filter}` : ''}`),
-        axios.get(`${API_URL}/api/stats`),
+        axios.get(`${API_URL}/api/requests${filter !== 'all' ? `?status=${filter}` : ''}`, { headers }),
+        axios.get(`${API_URL}/api/stats`, { headers }),
       ])
       setRequests(requestsRes.data)
       setStats(statsRes.data)
-    } catch (error) {
+      setError('')
+    } catch (error: any) {
       console.error('데이터 로딩 실패:', error)
+      if (error.response?.status === 401) {
+        localStorage.removeItem('access_token')
+        localStorage.removeItem('user_email')
+        router.push('/login')
+      } else if (error.response?.status === 403) {
+        setError('관리자 권한이 필요합니다')
+      } else {
+        setError('데이터를 불러올 수 없습니다')
+      }
     } finally {
       setLoading(false)
     }
@@ -53,11 +78,17 @@ export default function Dashboard() {
 
   const updateStatus = async (id: number, newStatus: string) => {
     try {
-      await axios.patch(`${API_URL}/api/requests/${id}`, { status: newStatus })
+      const token = localStorage.getItem('access_token')
+      await axios.patch(
+        `${API_URL}/api/requests/${id}`,
+        { status: newStatus },
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      )
       fetchData()
       setSelectedRequest(null)
-    } catch (error) {
+    } catch (error: any) {
       console.error('상태 업데이트 실패:', error)
+      alert('상태 업데이트 실패: ' + (error.response?.data?.detail || '알 수 없는 오류'))
     }
   }
 
@@ -65,11 +96,16 @@ export default function Dashboard() {
     if (!confirm('정말 이 요청을 삭제하시겠습니까?')) return
 
     try {
-      await axios.delete(`${API_URL}/api/requests/${id}`)
+      const token = localStorage.getItem('access_token')
+      await axios.delete(
+        `${API_URL}/api/requests/${id}`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      )
       fetchData()
       setSelectedRequest(null)
-    } catch (error) {
+    } catch (error: any) {
       console.error('삭제 실패:', error)
+      alert('삭제 실패: ' + (error.response?.data?.detail || '알 수 없는 오류'))
     }
   }
 
@@ -149,6 +185,12 @@ export default function Dashboard() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <h1 className="text-3xl font-bold text-gray-900 mb-8">관리 대시보드</h1>
+
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-800">{error}</p>
+        </div>
+      )}
 
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">

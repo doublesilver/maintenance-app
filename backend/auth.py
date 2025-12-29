@@ -25,6 +25,7 @@ class TokenData(BaseModel):
     email: Optional[str] = None
 
 class User(BaseModel):
+    id: Optional[int] = None
     email: str
     full_name: Optional[str] = None
     role: str = "user"
@@ -96,6 +97,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
         raise credentials_exception
 
     return User(
+        id=user["id"],
         email=user["email"],
         full_name=user["full_name"],
         role=user["role"]
