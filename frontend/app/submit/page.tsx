@@ -23,7 +23,10 @@ export default function SubmitRequest() {
     setResult(null)
 
     try {
-      const response = await axios.post(`${API_URL}/api/requests`, formData)
+      const response = await axios.post(`${API_URL}/api/requests`, {
+        ...formData,
+        use_async: false  // 동기 처리로 즉시 AI 분류
+      })
       setResult(response.data)
       setFormData({ description: '', location: '', contact_info: '' })
     } catch (err: any) {
