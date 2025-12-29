@@ -32,6 +32,7 @@
 - **File Storage**: AWS S3
 - **Real-time**: WebSocket
 - **Auth**: JWT (passlib + python-jose)
+- **Security**: Rate Limiting (slowapi), RBAC
 
 ### Frontend
 - **Framework**: Next.js 14
@@ -393,6 +394,39 @@ maintenance-app/
 ## 🤝 기여
 
 이 프로젝트는 포트폴리오용 개인 프로젝트입니다.
+
+---
+
+## 🔒 보안
+
+본 프로젝트는 다음 보안 기능을 구현하고 있습니다:
+
+### 인증 및 권한
+
+- **JWT 기반 인증**: Access Token (30분 만료)
+- **bcrypt 비밀번호 해싱**: Cost factor 12
+- **RBAC (Role-Based Access Control)**: User/Admin 역할 분리
+
+### Rate Limiting
+
+| 엔드포인트 | 제한 | 목적 |
+|-----------|------|------|
+| POST /api/auth/register | 5 req/min | 회원가입 스팸 방지 |
+| POST /api/auth/login | 10 req/min | Brute Force 공격 방지 |
+
+### 프로덕션 보안
+
+- ✅ Swagger UI 프로덕션 비활성화
+- ✅ HTTPS 강제 (Railway 자동 제공)
+- ✅ CORS 설정
+- ✅ SQL Injection 방지 (파라미터화된 쿼리)
+
+### 보안 가이드
+
+자세한 보안 설정 및 Railway 대시보드 사용법은 다음 문서를 참고하세요:
+- **[SECURITY_SETUP.md](SECURITY_SETUP.md)** - 보안 설정 및 Railway 사용 가이드
+- **[ADMIN_SETUP.md](ADMIN_SETUP.md)** - 관리자 계정 설정
+- **[SQLITE_VSCODE_GUIDE.md](SQLITE_VSCODE_GUIDE.md)** - 데이터베이스 관리
 
 ---
 

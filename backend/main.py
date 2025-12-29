@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, File, UploadFile, WebSocket, WebSocketDisconnect, Depends
+from fastapi import FastAPI, HTTPException, File, UploadFile, WebSocket, WebSocketDisconnect, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
@@ -10,6 +10,9 @@ from contextlib import contextmanager
 from dotenv import load_dotenv
 import boto3
 import uuid
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 from tasks import categorize_maintenance_request
 from auth import (
     Token, User, UserCreate, UserInDB,
@@ -19,6 +22,9 @@ from auth import (
 
 # .env 파일 로드
 load_dotenv()
+
+# Rate Limiter 초기화
+limiter = Limiter(key_func=get_remote_address)
 
 # Groq 클라이언트 초기화 (OpenAI 대신 사용)
 from groq import Groq
@@ -279,6 +285,10 @@ app = FastAPI(
     redoc_url="/redoc" if not is_production else None,
     openapi_url="/openapi.json" if not is_production else None
 )
+
+# Rate Limiter 설정
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # CORS 재설정 (lifespan 후)
 app.add_middleware(
@@ -614,8 +624,9 @@ async def get_stats(current_user: User = Depends(get_current_active_admin)):
 
 # 인증 엔드포인트
 @app.post("/api/auth/register", response_model=User)
-async def register(user: UserCreate):
-    """회원가입"""
+@limiter.limit("5/minute")  # 1분에 5번까지만 회원가입 시도 가능
+async def register(request: Request, user: UserCreate):
+    """회원가입 - Rate Limited: 5 requests/minute"""
     with get_db() as conn:
         cursor = conn.cursor()
 
@@ -645,8 +656,9 @@ async def register(user: UserCreate):
     )
 
 @app.post("/api/auth/login", response_model=Token)
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    """로그인"""
+@limiter.limit("10/minute")  # 1분에 10번까지만 로그인 시도 가능 (brute force 방지)
+async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
+    """로그인 - Rate Limited: 10 requests/minute"""
     with get_db() as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM users WHERE email = ?", (form_data.username,))
