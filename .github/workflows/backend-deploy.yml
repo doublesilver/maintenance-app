@@ -1,12 +1,13 @@
 name: Backend CI/CD
 
 on:
-  push:
-    branches: [ main, develop ]
-    paths:
-      - 'backend/**'
-  pull_request:
-    branches: [ main ]
+  workflow_dispatch:  # 수동 실행만 허용
+  # push:
+  #   branches: [ main, develop ]
+  #   paths:
+  #     - 'backend/**'
+  # pull_request:
+  #   branches: [ main ]
 
 jobs:
   test:
