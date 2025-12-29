@@ -20,7 +20,7 @@ export default function AdminUsersPage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
+    const token = localStorage.getItem('access_token')
     if (!token) {
       router.push('/login')
       return
@@ -31,7 +31,7 @@ export default function AdminUsersPage() {
 
   const fetchUsers = async () => {
     try {
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('access_token')
       const response = await axios.get(`${API_URL}/api/admin/users`, {
         headers: { Authorization: `Bearer ${token}` }
       })
@@ -41,7 +41,7 @@ export default function AdminUsersPage() {
       if (err.response?.status === 401) {
         router.push('/login')
       } else if (err.response?.status === 403) {
-        setError('관리자 권한이 필요합니다.')
+        setError('최고 관리자 권한이 필요합니다.')
         setLoading(false)
       } else {
         setError('사용자 목록을 불러오는데 실패했습니다.')
@@ -56,7 +56,7 @@ export default function AdminUsersPage() {
     }
 
     try {
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('access_token')
       await axios.patch(
         `${API_URL}/api/admin/users/${userId}/role?new_role=${newRole}`,
         {},
