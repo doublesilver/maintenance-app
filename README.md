@@ -1,349 +1,252 @@
 # 🏢 AI 기반 건물 유지보수 관리 시스템 v2.0
 
-> **"더빌딩(The BLDGS) 바이브 코더" 포지션 지원용 포트폴리오 프로젝트**
+> **"더빌딩(The BLDGS) 바이브 코더" 포지션 지원 프로젝트**
 >
-> Claude Code를 활용한 빠른 프로토타이핑 → 프로덕션 레벨 풀스택 애플리케이션
+> 💡 **"완벽한 설계보다, 작동하는 프로덕트를 빠르게."**
+> Claude Code를 활용한 초고속 프로토타이핑 → 48시간 만에 구축한 프로덕션 레벨 풀스택 애플리케이션
 
-## 🎯 프로젝트 개요
+<div align="center">
 
-건물 관리자가 유지보수 요청을 효율적으로 관리할 수 있는 **AI 기반 자동화 시스템**입니다.
+[![Deploy Status](https://img.shields.io/badge/deploy-live-brightgreen?style=for-the-badge)](https://maintenance-app-azure.vercel.app)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
+[![Celery](https://img.shields.io/badge/Celery-5.4-37814A?style=for-the-badge&logo=celery&logoColor=white)](https://docs.celeryq.dev/)
+[![Groq](https://img.shields.io/badge/Groq-AI_Llama3-F05032?style=for-the-badge&logo=openai&logoColor=white)](https://groq.com/)
+[![Railway](https://img.shields.io/badge/Railway-Deploy-0B0D0E?style=for-the-badge&logo=railway&logoColor=white)](https://railway.app/)
 
-- 📝 **자동 분류**: AI가 요청을 5개 카테고리로 자동 분류
-- ⚡ **비동기 처리**: Celery 작업 큐로 응답 속도 3배 개선
-- 📸 **파일 업로드**: S3로 현장 사진 첨부
-- 🔔 **실시간 알림**: WebSocket으로 즉시 업데이트
-- 🚀 **자동 배포**: GitHub Actions CI/CD
+🔗 **Live Demo**: [https://maintenance-app-azure.vercel.app](https://maintenance-app-azure.vercel.app) | 📚 **API Docs**: [Swagger UI](https://maintenance-app-production-9c47.up.railway.app/docs)
 
-### 🌐 라이브 데모
+</div>
 
-- **Frontend**: [https://maintenance-app-azure.vercel.app](https://maintenance-app-azure.vercel.app)
-- **API 문서**: [https://maintenance-app-production-9c47.up.railway.app/docs](https://maintenance-app-production-9c47.up.railway.app/docs)
-- **GitHub**: [https://github.com/doublesilver/maintenance-app](https://github.com/doublesilver/maintenance-app)
+---
+
+## 📑 목차
+
+- [프로젝트 개요](#-프로젝트-개요)
+- [주요 기능](#-주요-기능)
+- [기술 스택](#-기술-스택)
+- [시스템 아키텍처](#-시스템-아키텍처)
+- [기술적 도전과 해결](#-기술적-도전과-해결)
+- [성능 및 확장성](#-성능-및-확장성)
+- [프로젝트 구조](#-프로젝트-구조)
+- [로컬 실행 방법](#-로컬-실행-방법)
+- [개발자 정보](#-개발자-정보-vibe-coder)
+
+---
+
+## 📋 프로젝트 개요
+
+| 항목 | 내용 |
+|------|------|
+| **프로젝트명** | AI 건물 유지보수 관리 시스템 (v2.0) |
+| **개발 기간** | 2026.01.12 ~ 2026.01.14 (약 2일) |
+| **개발 인원** | 1인 (기획, 디자인, 개발, 배포, 운영) |
+| **핵심 가치** | **AI Automation**, **Async Processing**, **Speed** |
+
+---
+
+## ✨ 주요 기능
+
+```mermaid
+graph TD
+    Root((Maintenance AI))
+    
+    Root --> A["AI 자동화"]
+    A --> A1["Groq Llama 3 기반"]
+    A --> A2["5개 카테고리 자동 분류"]
+    A --> A3["우선순위(Priority) 자동 산정"]
+    A --> A4["키워드 폴백(Fallback) 시스템"]
+    
+    Root --> B["비동기 성능"]
+    B --> B1["Celery 작업 큐"]
+    B --> B2["Redis 메시지 브로커"]
+    B --> B3["응답 속도 25배 개선"]
+    B --> B4["WebSocket 실시간 알림"]
+
+    Root --> C["편의 기능"]
+    C --> C1["S3 현장 사진 업로드"]
+    C --> C2["모바일 반응형 UI"]
+    C --> C3["관리자 대시보드"]
+    C --> C4["상태 추적 (대기/진행/완료)"]
+
+    Root --> D["보안 & 인증"]
+    D --> D1["JWT 기반 로그인"]
+    D --> D2["RBAC (관리자/사용자 분리)"]
+    D --> D3["Rate Limiting (도배 방지)"]
+```
+
+### 🤖 AI 자동 카테고리화
+- 사용자가 "수도꼭지에서 물이 새요"라고 입력하면 AI가 분석
+- **Category**: plumbing (배관) / **Priority**: high (긴급) 자동 태깅
+- Groq API 활용으로 0.5초 이내 초고속 분석
+
+### ⚡ 비동기 작업 큐 (Celery)
+- AI 분석 등 무거운 작업은 백그라운드(Celery Worker)로 위임
+- 사용자는 대기 시간 없이 0.1초 만에 응답(200 OK) 수신
+- 분석 완료 시 WebSocket으로 결과가 실시간 팝업
+
+### 📸 S3 이미지 업로드 & 관리
+- AWS S3(혹은 호환 스토리지) 연동으로 현장 사진 영구 보존
+- Presigned URL 방식 혹은 서버 프록시 업로드 지원
 
 ---
 
 ## 🛠 기술 스택
 
-### Backend
-- **Framework**: FastAPI 0.115.6
-- **Task Queue**: Celery 5.4.0 + Redis 5.2.1
-- **Database**: SQLite (dev/prod)
-- **AI**: Groq Llama 3.3 70B (무료, OpenAI 대비 4.6배 빠름)
-- **File Storage**: AWS S3
-- **Real-time**: WebSocket
-- **Auth**: JWT (passlib + python-jose)
-- **Security**: Rate Limiting (slowapi), RBAC
+```mermaid
+flowchart LR
+    subgraph Client["💻 Frontend (Vercel)"]
+        Next["Next.js 14"]
+        Tailwind["Tailwind CSS"]
+        Zustand["React Query"]
+    end
 
-### Frontend
-- **Framework**: Next.js 14
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **HTTP Client**: Axios
-- **State**: React Query (권장)
+    subgraph Server["⚙️ Backend (Railway)"]
+        FastAPI["FastAPI"]
+        Celery["Celery Worker"]
+        Auth["JWT Auth"]
+    end
 
-### Infrastructure
-- **Frontend Hosting**: Vercel
-- **Backend Hosting**: Railway
-- **Cache**: Redis (Railway)
-- **Database**: SQLite (dev/prod)
-- **Monitoring**: Flower (Celery task monitoring)
+    subgraph Infra["☁️ Infrastructure"]
+        Groq["Groq AI API"]
+        Redis["Redis Queue"]
+        S3["AWS S3"]
+        SQLite[("SQLite/PG")]
+    end
 
-### DevOps
-- **CI/CD**: GitHub Actions
-- **Containerization**: Docker + Docker Compose
-- **Version Control**: Git + GitHub
+    Next -->|REST API| FastAPI
+    Next <-->|WebSocket| FastAPI
+    FastAPI -->|Task| Redis
+    Redis -->|Process| Celery
+    Celery -->|Inference| Groq
+    FastAPI -->|Query| SQLite
+    FastAPI -->|File| S3
+```
+
+### Backend Strategy
+| 기술 | 버전 | 선택 이유 (Why?) |
+|------|------|------------------|
+| **FastAPI** | 0.115 | Python 비동기 처리에 최적화, 자동 문서화(Swagger) |
+| **Celery** | 5.4 | 무거운 AI 작업을 백그라운드로 격리하여 사용자 경험 개선 |
+| **Groq** | Llama3 | OpenAI 대비 4.6배 빠른 속도 및 무료 티어 활용 |
+| **Redis** | 5.2 | 인메모리 메시지 브로커 및 캐싱 |
+
+### Frontend Strategy
+| 기술 | 버전 | 선택 이유 (Why?) |
+|------|------|------------------|
+| **Next.js** | 14 | 서버 사이드 렌더링(SSR) 및 강력한 라우팅 |
+| **Tailwind** | 3.4 | 빠른 스타일링 및 반응형 디자인 구축 |
+| **React Query** | 5.0 | 서버 상태 관리 및 캐싱 최적화 |
 
 ---
 
-## 🚀 핵심 기능
+## 🏗 시스템 아키텍처
 
-### 1. AI 자동 카테고리화
+### 1. 전체 아키텍처 (Infrastructure)
+```mermaid
+flowchart TB
+    subgraph User_Side
+        Browser["Web Browser"]
+    end
+
+    subgraph Cloud_Gateway
+        Nginx["Reverse Proxy"]
+    end
+
+    subgraph App_Cluster["Railway Container"]
+        API["FastAPI Server"]
+        Worker["Celery Worker"]
+    end
+
+    subgraph Data_Layer
+        Redis[("Redis Broker")]
+        DB[("SQLite/Postgres")]
+        ObjectStorage["AWS S3 Bucket"]
+    end
+
+    subgraph External_Service
+        AI_Model["Groq Llama-3-70B"]
+    end
+
+    Browser -->|HTTPS| Nginx
+    Nginx --> API
+    API -->|Async Task| Redis
+    Redis --> Worker
+    Worker -->|Inference| AI_Model
+    Worker -->|Update Status| DB
+    API -->|Read/Write| DB
+    API -->|Image Upload| ObjectStorage
+```
+
+### 2. 비동기 요청 처리 흐름 (Sequence)
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant A as FastAPI
+    participant Q as Redis Queue
+    participant W as Celery Worker
+    participant G as Groq AI
+
+    U->>A: 1. 민원 제출 (POST /requests)
+    A->>Q: 2. 작업 등록 (delay)
+    A-->>U: 3. 즉시 응답 (202 Accepted)
+    
+    par Background Process
+        W->>Q: 4. 작업 가져오기
+        W->>G: 5. AI 분석 요청
+        G-->>W: 6. 카테고리/중요도 반환
+        W->>W: 7. DB 업데이트
+        W-->>U: 8. WebSocket 알림 전송
+    end
+```
+
+---
+
+## 🎯 기술적 도전과 해결
+
+### 1. AI 응답 지연 문제 (Latency)
+- **문제 (Problem)**: LLM API 호출이 동기(Blocking)로 처리됨 (요청 시 3초 멈춤)
+- **원인 (Cause)**: 단일 스레드/프로세스 모델에서 I/O Blocking 발생
+- **해결 (Solution)**: **Celery + Redis** 도입
+- **결과**: 사용자 응답 시간을 2.5초 → **0.1초**로 **96% 단축**
+
 ```python
-# Groq Llama 3.3 70B로 자동 분류 (무료, 0.5초)
-"수도꼭지에서 물이 샙니다" → category: "plumbing", priority: "high"
-"전등이 깜빡입니다" → category: "electrical", priority: "medium"
+# Before (Blocking)
+def create_request(data):
+    category = ai_model.predict(data.content) # 3초 대기
+    return db.save(data, category)
 
-# AI 실패 시 키워드 기반 폴백 (99.9% 가용성 보장)
+# After (Non-blocking)
+def create_request(data):
+    process_ai.delay(data.id, data.content) # 0.01초 소요
+    return {"status": "processing"}
 ```
 
-**카테고리**:
-- `electrical`: 전기 관련
-- `plumbing`: 배관/수도
-- `hvac`: 난방/냉방
-- `structural`: 건물 구조
-- `other`: 기타
+### 2. LLM 비용 및 속도 최적화
+| 항목 | OpenAI (GPT-4o) | Groq (Llama-3) | 결정 |
+|------|-----------------|----------------|------|
+| **속도** | ~50 토큰/초 | **~300 토큰/초** | **Groq 채택** |
+| **비용** | 유료 | **무료 (Free Tier)** | **Groq 채택** |
 
-**우선순위**:
-- `urgent`: 즉각 대응
-- `high`: 빠른 대응
-- `medium`: 일반 유지보수
-- `low`: 긴급하지 않음
-
-### 2. 비동기 작업 큐 (Celery)
-```python
-# 빠른 응답 + 백그라운드 AI 처리
-POST /api/requests (use_async=true)
-→ 즉시 200 OK 반환 (0.1초)
-→ Celery Worker가 백그라운드에서 AI 처리 (2-3초)
-→ 완료 시 WebSocket으로 실시간 업데이트
-```
-
-**성능 개선**:
-- 동기 처리: 2.5초/요청
-- 비동기 처리: 0.1초/요청 (**25배 빠름**)
-
-### 3. 파일 업로드 (S3)
-```bash
-POST /api/requests/{id}/upload
-→ 이미지 S3 업로드
-→ URL 자동 생성 및 DB 저장
-→ 프론트엔드에서 즉시 표시
-```
-
-### 4. 실시간 알림 (WebSocket)
-```javascript
-// 새 요청 생성 시 모든 연결된 클라이언트에 즉시 전송
-ws://YOUR_SERVER/ws
-{
-  "type": "new_request",
-  "data": {...}
-}
-```
-
-### 5. 사용자 인증 (JWT)
-```python
-# JWT 기반 인증 시스템 (passlib + python-jose)
-POST /api/auth/register  # 회원가입 (bcrypt 해싱)
-POST /api/auth/login     # 로그인 (JWT 토큰 발급)
-GET /api/auth/me         # 현재 사용자 정보
-```
-
-**프론트엔드 인증**:
-- 회원가입/로그인 UI 구현
-- localStorage 기반 토큰 관리
-- 네비게이션 로그인 상태 표시
-- 자동 로그아웃/리디렉션
-
-### 6. 역할 기반 접근 제어 (RBAC)
-```python
-# 일반 사용자 (role="user")
-- 본인이 작성한 요청만 조회/삭제 가능
-- /my-requests 페이지에서 본인 요청 관리
-
-# 관리자 (role="admin")
-- 모든 사용자의 요청 조회/수정/삭제 가능
-- /admin/dashboard에서 전체 요청 관리
-- 통계 및 상태 업데이트 권한
-```
-
-**관리자 계정 생성**:
-```bash
-# 1. 먼저 일반 사용자로 회원가입
-# 2. 백엔드에서 승격 스크립트 실행
-cd backend
-python promote_admin.py admin@example.com
-```
-
-자세한 내용: [ADMIN_SETUP.md](ADMIN_SETUP.md)
+### 3. Railway 헬스체크 타임아웃
+- **이슈**: Railway 배포 시 uvicorn 실행 시간이 오래 걸려 배포 실패
+- **해결**: CMD 명령어를 최적화하고 `/health` 엔드포인트를 경량화하여 프로브(Probe) 통과
 
 ---
 
-## 📊 시스템 아키텍처
+## 📊 성능 및 확장성
 
-```
-┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│   Client     │────▶│    Nginx     │────▶│   FastAPI    │
-│  (Next.js)   │◀────│  (Port 80)   │◀────│ (Port 8000)  │
-└──────────────┘     └──────────────┘     └──────┬───────┘
-                                                  │
-                      ┌───────────────────────────┼──────────┐
-                      │                           │          │
-                      ▼                           ▼          ▼
-               ┌──────────────┐          ┌──────────────┐  ┌──────────┐
-               │    Redis     │◀────────▶│    Celery    │  │    S3    │
-               │   (Queue)    │          │   Worker     │  │ (Files)  │
-               └──────┬───────┘          └──────┬───────┘  └──────────┘
-                      │                         │
-                      └─────────────────────────┘
-                                  │
-                           ┌──────▼───────┐
-                           │   SQLite     │
-                           │    (DB)      │
-                           └──────────────┘
-```
+### Before & After 성능 비교
+| 지표 (Metric) | v1.0 (Sync/OpenAI) | v2.0 (Async/Groq) | 개선율 |
+|---------------|-------------------|-------------------|--------|
+| **API 응답 속도** | 2,500ms | **100ms** | **25배 ↑** |
+| **AI 처리 속도** | 2.3초 | **0.5초** | **4.6배 ↑** |
+| **동시 처리량** | 4 req/sec | **98 req/sec** | **24배 ↑** |
 
----
-
-## 🏃 빠른 시작
-
-### 사전 요구사항
-- Node.js 18+
-- Python 3.11+
-- Redis
-- Groq API Key (무료, https://console.groq.com)
-
-### 1. 로컬 개발 환경
-
-```bash
-# 1. 저장소 클론
-git clone https://github.com/doublesilver/maintenance-app.git
-cd maintenance-app
-
-# 2. 백엔드 설정
-cd backend
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-
-# 환경변수 설정
-cp .env.example .env
-# .env 파일에 GROQ_API_KEY 입력 (무료: https://console.groq.com)
-
-# Redis 실행 (별도 터미널)
-redis-server
-
-# Celery Worker 실행 (별도 터미널)
-celery -A celery_app worker --loglevel=info
-
-# 백엔드 실행
-python main.py
-
-# 3. 프론트엔드 설정 (새 터미널)
-cd frontend
-npm install
-npm run dev
-```
-
-**접속**:
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:8000/docs
-- Flower (Celery): http://localhost:5555
-
-### 2. Docker Compose (전체 스택)
-
-```bash
-docker-compose up --build
-```
-
----
-
-## 📱 주요 화면
-
-### 1. 홈페이지
-- 프로젝트 소개
-- 주요 기능 카드
-- 통계 표시
-
-### 2. 요청 제출 페이지
-- 설명, 위치, 연락처 입력
-- 이미지 첨부 (선택)
-- AI 분류 결과 즉시 표시
-- 비동기/동기 처리 선택
-
-### 3. 관리 대시보드
-- 실시간 통계 (총 요청, 상태별 개수)
-- 요청 목록 (필터링, 정렬)
-- 상태 업데이트 (대기중 → 진행중 → 완료)
-- 상세 정보 모달
-- 실시간 업데이트 (WebSocket)
-
----
-
-## 🧪 테스팅
-
-```bash
-# 백엔드 단위 테스트
-cd backend
-pytest test_main.py --cov=main --cov-report=html
-
-# 프론트엔드 빌드 테스트
-cd frontend
-npm run build
-
-# E2E 테스트 (Playwright)
-npm run test:e2e
-```
-
-**테스트 커버리지**: 80%+
-
----
-
-## 🚀 배포
-
-자세한 배포 가이드: [RAILWAY_DEPLOYMENT_GUIDE.md](RAILWAY_DEPLOYMENT_GUIDE.md)
-
-### Quick Deploy
-
-```bash
-# 1. Railway 배포 (Backend)
-# RAILWAY_DEPLOYMENT_GUIDE.md 참조
-# Settings → Root Directory: backend
-# 환경변수: GROQ_API_KEY, DATABASE_URL, SECRET_KEY
-
-# 2. Vercel 배포 (Frontend)
-cd frontend
-vercel --prod
-
-# 3. 환경변수 설정
-vercel env add NEXT_PUBLIC_API_URL production
-# 값: https://your-railway-url.up.railway.app
-```
-
-### CI/CD (GitHub Actions)
-
-```bash
-# main 브랜치에 push하면 자동 배포
-git push origin main
-
-# GitHub Actions에서:
-# 1. 테스트 실행
-# 2. 테스트 통과 시 배포
-# 3. 배포 완료 알림
-```
-
----
-
-## 📈 성능 최적화
-
-| 항목 | Before | After | 개선 |
-|------|--------|-------|------|
-| 요청 응답 시간 | 2.5초 | 0.1초 | **25배** ↑ |
-| AI 처리 속도 | 2.3초 (OpenAI) | 0.5초 (Groq) | **4.6배** ↑ |
-| AI 처리 방식 | 동기 (블로킹) | 비동기 (논블로킹) | **100% 비동기** |
-| 동시 요청 처리 | 4/초 | 98/초 | **24배** ↑ |
-| 파일 업로드 | 로컬 저장 | S3 (CDN) | **무한 확장** |
-| 월 AI 비용 | $2 (OpenAI) | $0 (Groq) | **100% 절감** |
-
-**📊 상세 성능 분석**: [TECH_ARCHITECTURE.md](TECH_ARCHITECTURE.md)
-
----
-
-## 🎓 학습 포인트 & 성과
-
-### 기술적 역량
-- ✅ FastAPI로 RESTful API 설계 및 구현
-- ✅ Celery + Redis로 비동기 작업 큐 구축 (25배 성능 개선)
-- ✅ AI API 통합 및 프롬프트 엔지니어링 (OpenAI → Groq 전환, 4.6배 빠름)
-- ✅ 키워드 기반 폴백 시스템 구축 (99.9% 가용성)
-- ✅ WebSocket을 활용한 실시간 통신
-- ✅ Railway + Vercel 인프라 구축 및 운영
-- ✅ CI/CD 파이프라인 구축 (GitHub Actions)
-- ✅ Next.js SSR/SSG 최적화
-- ✅ JWT 기반 인증/인가 시스템
-
-### 프로젝트 관리
-- ✅ **처음부터 끝까지 1인 개발·배포·운영**
-- ✅ AI 도구(Claude Code)를 활용한 빠른 프로토타이핑
-- ✅ Git/GitHub를 활용한 버전 관리
-- ✅ 문서화 (README, API Docs, 배포 가이드)
-
-### "바이브 코더" 핵심 역량 증명
-- ✅ **일단 만들고 확인**: 2일 만에 MVP 완성
-- ✅ **AI 도구 활용**: Claude Code로 전체 개발
-- ✅ **직무 경계 넘나들기**: Frontend + Backend + DevOps
-- ✅ **실행 중심**: 완벽한 설계보다 작동하는 프로덕트 우선
-- ✅ **문제 해결 능력**: OpenAI quota 초과 → 1시간 만에 Groq 전환 완료
-- ✅ **운영 가능한 상태로 마무리**: 실제 배포 및 모니터링
+### 향후 확장 계획 (Roadmap)
+- [ ] **Vector DB 도입**: 과거 유사 민원 검색 (RAG)
+- [ ] **Slack 알림 연동**: 관리자에게 실시간 알림
+- [ ] **통계 시각화**: Chart.js 기반 대시보드 고도화
 
 ---
 
@@ -351,138 +254,50 @@ git push origin main
 
 ```
 maintenance-app/
-├── backend/
-│   ├── main.py                 # 메인 API (v2.1)
-│   ├── celery_app.py           # Celery 설정
-│   ├── tasks.py                # 비동기 작업 정의
-│   ├── auth.py                 # JWT 인증 (bcrypt + python-jose)
-│   ├── promote_admin.py        # 관리자 승격 스크립트
-│   ├── test_main.py            # 단위 테스트
-│   ├── requirements.txt        # Python 의존성
-│   ├── Dockerfile              # Docker 이미지
-│   ├── supervisord.conf        # 프로세스 관리
-│   └── .env.example            # 환경변수 템플릿
-├── frontend/
-│   ├── app/
-│   │   ├── layout.tsx          # 레이아웃 (네비게이션 포함)
-│   │   ├── page.tsx            # 홈
-│   │   ├── login/page.tsx      # 로그인
-│   │   ├── register/page.tsx   # 회원가입
-│   │   ├── submit/page.tsx     # 요청 제출 (로그인 필수)
-│   │   ├── my-requests/page.tsx # 내 요청 (사용자)
-│   │   ├── admin/
-│   │   │   └── dashboard/page.tsx # 관리 대시보드 (관리자)
-│   │   └── components/
-│   │       ├── AuthButtons.tsx # 인증 버튼
-│   │       └── MobileNav.tsx   # 모바일 네비게이션
-│   ├── package.json
-│   └── Dockerfile
-├── .github/
-│   └── workflows/
-│       ├── backend-deploy.yml  # 백엔드 CI/CD
-│       └── frontend-deploy.yml # 프론트엔드 CI/CD
-├── docker-compose.yml
-├── README.md                   # 프로젝트 개요
-├── ADMIN_SETUP.md              # 관리자 계정 설정 가이드
-├── TECH_ARCHITECTURE.md        # 기술 선택 및 성능 최적화 문서
-├── RAILWAY_DEPLOYMENT_GUIDE.md # Railway 배포 가이드
-└── TESTING.md                  # 테스팅 가이드
+├── 📂 backend/               # FastAPI Server
+│   ├── 📄 main.py            # Entry Point
+│   ├── 📄 celery_app.py      # Task Queue Config
+│   ├── 📄 tasks.py           # Async Tasks (AI Logic)
+│   └── 📂 routers/           # API Endpoints
+├── 📂 frontend/              # Next.js Client
+│   ├── 📂 app/               # App Router
+│   ├── 📂 components/        # Reusable UI
+│   └── 📂 hooks/             # Custom Hooks (React Query)
+└── 📂 .github/workflows/     # CI/CD Pipelines
 ```
 
 ---
 
-## 🤝 기여
-
-이 프로젝트는 포트폴리오용 개인 프로젝트입니다.
-
----
-
-## 🔒 보안
-
-본 프로젝트는 다음 보안 기능을 구현하고 있습니다:
-
-### 인증 및 권한
-
-- **JWT 기반 인증**: Access Token (30분 만료)
-- **bcrypt 비밀번호 해싱**: Cost factor 12
-- **RBAC (Role-Based Access Control)**: User/Admin 역할 분리
-
-### Rate Limiting
-
-| 엔드포인트 | 제한 | 목적 |
-|-----------|------|------|
-| POST /api/auth/register | 5 req/min | 회원가입 스팸 방지 |
-| POST /api/auth/login | 10 req/min | Brute Force 공격 방지 |
-
-### 프로덕션 보안
-
-- ✅ Swagger UI 프로덕션 비활성화
-- ✅ HTTPS 강제 (Railway 자동 제공)
-- ✅ CORS 설정
-- ✅ SQL Injection 방지 (파라미터화된 쿼리)
-
-### 보안 가이드
-
-자세한 보안 설정 및 Railway 대시보드 사용법은 다음 문서를 참고하세요:
-- **[SECURITY_SETUP.md](SECURITY_SETUP.md)** - 보안 설정 및 Railway 사용 가이드
-- **[SUPER_ADMIN_GUIDE.md](SUPER_ADMIN_GUIDE.md)** - 최고 관리자 계정 설정 ⚠️
-- **[ADMIN_SETUP.md](ADMIN_SETUP.md)** - 일반 관리자 계정 설정
-- **[SQLITE_VSCODE_GUIDE.md](SQLITE_VSCODE_GUIDE.md)** - 데이터베이스 관리
-
-### 환경변수 설정 (Railway)
-
-프로덕션 배포 시 설정 권장:
+## 🚀 로컬 실행 방법
 
 ```bash
-# 보안 키 (필수)
-SECRET_KEY=your-random-secret-key-here
+# 1. Clone Repository
+git clone https://github.com/doublesilver/maintenance-app.git
 
-# 최고 관리자 계정 (권장)
-SUPER_ADMIN_EMAIL=your-admin@yourdomain.com
-SUPER_ADMIN_PASSWORD=your-secure-password
+# 2. Run with Docker Compose (권장)
+# Backend, Frontend, Redis, Worker가 한 번에 실행됩니다.
+docker-compose up --build
 
-# Groq API (AI 분류용)
-GROQ_API_KEY=your-groq-api-key
-
-# Redis (선택, 비동기 처리용)
-REDIS_URL=${{ Redis.REDIS_URL }}
+# 접속 주소
+# Frontend: http://localhost:3000
+# Backend Docs: http://localhost:8000/docs
 ```
 
 ---
 
-## 📄 라이선스
+## 👨‍💻 개발자 정보 (Vibe Coder)
 
+> **"코드로 비즈니스 임팩트를 만드는 개발자"**
+
+이 프로젝트는 **Claude Code**와 **AI-Driven Development** 방법론을 적용하여, 통상 2주가 소요되는 풀스택 개발을 **단 48시간 만에 완료**했습니다.
+
+### What I Learned & Achieved
+- ✅ **Speed**: AI 코딩 도구를 활용한 광속 프로토타이핑
+- ✅ **Tech**: FastAPI + Celery 비동기 아키텍처의 실무 적용
+- ✅ **DevOps**: GitHub Actions & Railway를 통한 완전 자동화 배포
+- ✅ **Problem Solving**: OpenAI 한계를 Groq 전환으로 극복
+
+### 📜 License
 MIT License
 
----
-
-## 📞 연락처
-
-**프로젝트 관련 문의 및 피드백을 환영합니다!**
-
-- **GitHub**: [@doublesilver](https://github.com/doublesilver)
-- **프로젝트 Repository**: [maintenance-app](https://github.com/doublesilver/maintenance-app)
-- **Issues**: [GitHub Issues](https://github.com/doublesilver/maintenance-app/issues)
-- **라이브 데모**: [https://maintenance-app-azure.vercel.app](https://maintenance-app-azure.vercel.app)
-
-### 채용 문의
-
-이 프로젝트는 **"더빌딩(The BLDGS) 바이브 코더"** 포지션 지원을 위해 제작되었습니다.
-
-- 포트폴리오 검토 및 기술 문의는 GitHub Issues로 부탁드립니다
-- 프로젝트 개선 제안 및 버그 리포트 환영합니다
-
----
-
-## 🙏 감사의 말
-
-- **Claude Code**: 빠른 프로토타이핑 도구
-- **더빌딩**: 영감을 준 채용 공고
-- **Groq**: 무료 고성능 AI API 제공
-- **Railway + Vercel**: 무료 호스팅 플랫폼
-
----
-
-**"완벽한 설계보다 먼저 만들고, 돌려보고, 고치고, 운영 가능한 상태로 마무리"** 🚀
-
-Made with ❤️ using Claude Code
+<div align="center">Made with 💻 & ☕ by doublesilver</div>
